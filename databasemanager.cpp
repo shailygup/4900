@@ -1242,14 +1242,13 @@ REPORT QUERYS (START)
 ==============================================================================*/
 bool DatabaseManager::getDailyReportCheckoutQuery(QSqlQuery* queryResults, QDate date)
 {
-    QString sort="BcitTestWay.dbo.SortValue(s.SpaceCode)";
     QString queryString =
         QString("SELECT b.ClientName, s.SpaceCode, b.StartDate, ")
         + QString("b.EndDate, b.ProgramCode, c.EspDays, REPLACE('$' + CAST(c.Balance AS VARCHAR), '$-', '-$') ")
         + QString("FROM Booking b INNER JOIN Client c ON b.ClientId = c.ClientId ")
         + QString("INNER JOIN Space s ON b.SpaceId = s.SpaceId ")
         + QString("WHERE EndDate = '" + date.toString(Qt::ISODate))
-        + QString("' AND FirstBook = 'YES' ORDER BY b.StartDate Asc" );
+        + QString("' AND FirstBook = 'YES' ORDER BY b.ProgramCode Desc" );
 
         // qDebug() << queryString;
     return queryResults->exec(queryString);
@@ -1271,12 +1270,11 @@ bool DatabaseManager::getDailyReportVacancyQuery(QSqlQuery* queryResults, QDate 
 
 bool DatabaseManager::getDailyReportLunchQuery(QSqlQuery* queryResults, QDate date)
 {
-    QString sort="BcitTestWay .dbo .SortValue (l.SpaceCode)";
     QString queryString =
         QString("SELECT ISNULL(c.LastName, '') + ', ' + ISNULL(c.FirstName, '') ")
         + QString("+ ' ' + ISNULL(c.MiddleName, ''), l.SpaceCode, l.Number ")
         + QString("FROM Lunches l INNER JOIN Client c ON l.ClientId = c.ClientId ")
-        + QString("WHERE LunchDate = '" + date.toString(Qt::ISODate) + "' ORDER BY " + sort);
+        + QString("WHERE LunchDate = '" + date.toString(Qt::ISODate) + "'");
 
         //qDebug() << queryString;
     return queryResults->exec(queryString);
@@ -1305,7 +1303,7 @@ bool DatabaseManager::getShiftReportBookingQuery(QSqlQuery* queryResults,
         + QString("FROM BookingHistory ")
         + QString("WHERE Date = '" + date.toString(Qt::ISODate) + "' AND ")
         + QString("ShiftNo = " + QString::number(shiftNo))
-        + QString(" ORDER BY Time Desc");
+        + QString(" ORDER BY Time Asc");
     //qDebug() << queryString;
     return queryResults->exec(queryString);
 }
@@ -1343,7 +1341,25 @@ bool DatabaseManager::getShiftReportTransactionQuery(QSqlQuery* queryResults,
         + QString("t.EmpName, CONVERT(VARCHAR(15), t.Time, 100), t.Notes " )
         + QString("FROM Client c INNER JOIN Transac t ON c.ClientId = t.ClientId ")
         + QString("WHERE Date = '" + date.toString(Qt::ISODate) + "' AND ")
-        + QString("ShiftNo = " + QString::number(shiftNo))
+        + QString("ShiftNo = '" + QString::number(shiftNo)+ "' AND ")
+        + QString("t.TransType != 'Refund'")
+        + QString(" ORDER BY t.Time Asc");
+    // qDebug() << queryString;
+    return queryResults->exec(queryString);
+}
+
+bool DatabaseManager::getShiftReportRefundQuery(QSqlQuery* queryResults,
+    QDate date, int shiftNo)
+{
+    QString queryString =
+        QString("SELECT c.FirstName, c.MiddleName, c.LastName, t.TransType, ")
+        + QString("t.Type, t.Amount, t.MSQ, t.ChequeNo, t.ChequeDate, ")
+        + QString("CAST(t.Outstanding AS INT), CAST(t.Deleted AS INT), ")
+        + QString("t.EmpName, CONVERT(VARCHAR(15), t.Time, 100), t.Notes " )
+        + QString("FROM Client c INNER JOIN Transac t ON c.ClientId = t.ClientId ")
+        + QString("WHERE Date = '" + date.toString(Qt::ISODate) + "' AND ")
+        + QString("ShiftNo = '" + QString::number(shiftNo)+ "' AND ")
+        + QString("t.TransType = 'Refund'")
         + QString(" ORDER BY t.Time Asc");
     // qDebug() << queryString;
     return queryResults->exec(queryString);
@@ -1444,35 +1460,43 @@ bool DatabaseManager::getShiftReportTotal(QDate date, int shiftNo, QString payTy
         + QString("FROM Transac ")
         + QString("WHERE (Date = '" + date.toString(Qt::ISODate) + "' AND ")
         + QString("ShiftNo = " + QString::number(shiftNo) + " AND ")
-        + QString("Type = '" + payType + "')")
+        + QString("TransType = '" + payType + "')")
         + QString("AND ((TransType = 'Refund' AND Deleted = 0 AND Outstanding = 0) ")
         + QString("OR (TransType = 'Payment' AND Deleted = 1 AND Outstanding = 0))) as r");
+
     // qDebug() << queryString;
     return DatabaseManager::getDoubleFromQuery(queryString, result);
 }
 
 void DatabaseManager::getShiftReportStatsThread(QDate date, int shiftNo)
 {
-    double cashTotal, electronicTotal, chequeTotal;
+    double cashTotal, electronicTotal, chequeTotal, refundTotal;
     QStringList list;
     bool conn = false;
+
     if (DatabaseManager::getShiftReportTotal(date, shiftNo, PAY_CASH, &cashTotal))
     {
         if (DatabaseManager::getShiftReportTotal(date, shiftNo, PAY_ELECTRONIC, &electronicTotal))
         {
             if (DatabaseManager::getShiftReportTotal(date, shiftNo, PAY_CHEQUE, &chequeTotal))
             {
-                list << QString("%1%2").arg(cashTotal >= 0 ? "$" : "-$").
-                    arg(QString::number(fabs(cashTotal), 'f', 2));
-                list << QString("%1%2").arg(electronicTotal >= 0 ? "$" : "-$").
-                    arg(QString::number(fabs(electronicTotal), 'f', 2));
-                list << QString("%1%2").arg(chequeTotal >= 0 ? "$" : "-$").
-                    arg(QString::number(fabs(chequeTotal), 'f', 2));
-                list << QString("%1%2").arg(cashTotal + chequeTotal >= 0 ? "$" : "-$").
-                    arg(QString::number(fabs(cashTotal + chequeTotal), 'f', 2));
-                list << QString("%1%2").arg(cashTotal + electronicTotal + chequeTotal >= 0 ? "$" : "-$").
-                    arg(QString::number(fabs(cashTotal + electronicTotal + chequeTotal), 'f', 2));
-                conn = true;
+                if (DatabaseManager::getShiftReportTotal(date, shiftNo, PAY_REFUND, &refundTotal))
+                {
+                    list << QString("%1%2").arg(cashTotal >= 0 ? "$" : "-$").
+                        arg(QString::number(fabs(cashTotal), 'f', 2));
+                    list << QString("%1%2").arg(electronicTotal >= 0 ? "$" : "-$").
+                        arg(QString::number(fabs(electronicTotal), 'f', 2));
+                    list << QString("%1%2").arg(chequeTotal >= 0 ? "$" : "-$").
+                        arg(QString::number(fabs(chequeTotal), 'f', 2));
+                    list << QString("%1%2").arg(cashTotal + chequeTotal >= 0 ? "$" : "-$").
+                        arg(QString::number(fabs(cashTotal + chequeTotal), 'f', 2));
+                    list << QString("%1%2").arg("$").
+                        arg(QString::number(fabs(refundTotal),'f',2));
+                    list << QString("%1%2").arg(cashTotal + electronicTotal + chequeTotal + refundTotal >= 0 ? "$" : "-$").
+                        arg(QString::number(fabs(cashTotal + electronicTotal + chequeTotal + refundTotal), 'f', 2));
+
+                    conn = true;
+                }
             }
         }
     }
@@ -2104,7 +2128,6 @@ QStringList DatabaseManager::getSpaceInfoFromId(int spaceId)
 {
     QStringList spaceInfo;
     QSqlQuery query(db);
-    QString sort="BcitTestWay .dbo .SortValue (SpaceCode)";
     QString queryString = "SELECT SpaceCode FROM Space WHERE SpaceId = " + QString::number(spaceId) + ";";
     if (query.exec(queryString))
     {
@@ -2157,7 +2180,7 @@ QSqlQuery DatabaseManager::deleteEmployee(QString username, QString password, QS
     QSqlQuery query(db);
 
     query.exec("DELETE FROM Employee WHERE Username='" + username
-               + "' AND Role='" + role + "';");
+               + "' AND Password='" + password + "' AND Role='" + role + "';");
 
     return query;
 }
@@ -2211,11 +2234,11 @@ QSqlQuery DatabaseManager::AddProgram(QString pcode, QString pdesc) {
 QSqlQuery DatabaseManager::getAvailableBeds(QString pcode) {
     DatabaseManager::checkDatabaseConnection(&db);
     QSqlQuery query(db);
-    QString sort="BcitTestWay .dbo .SortValue (s.SpaceCode)";
+
     query.exec("SELECT b.BuildingNo, f.FloorNo, r.RoomNo, s.SpaceId, s.SpaceNo, s.type, s.cost, s.Monthly, s.ProgramCodes "
                "FROM Space s INNER JOIN Room r ON s.RoomId = r.RoomId INNER JOIN Floor f ON r.FloorId = f.FloorId "
                "INNER JOIN Building b ON f.BuildingId = b.BuildingId "
-               "WHERE s.ProgramCodes NOT LIKE '%" + pcode + "%' ORDER BY "+ sort);
+               "WHERE s.ProgramCodes NOT LIKE '%" + pcode + "%' ORDER BY s.SpaceCode");
 
     // qDebug() << ":" + pcode+ ":";
 
@@ -2225,11 +2248,11 @@ QSqlQuery DatabaseManager::getAvailableBeds(QString pcode) {
 QSqlQuery DatabaseManager::getAssignedBeds(QString pcode) {
     DatabaseManager::checkDatabaseConnection(&db);
     QSqlQuery query(db);
-    QString sort="BcitTestWay .dbo .SortValue (s.SpaceCode)";
+
     query.exec("SELECT b.BuildingNo, f.FloorNo, r.RoomNo, s.SpaceId, s.SpaceNo, s.type, s.cost, s.Monthly, s.ProgramCodes "
                "FROM Space s INNER JOIN Room r ON s.RoomId = r.RoomId INNER JOIN Floor f ON r.FloorId = f.FloorId "
                "INNER JOIN Building b ON f.BuildingId = b.BuildingId "
-               "WHERE s.ProgramCodes LIKE '%" + pcode + "%' ORDER BY " + sort);
+               "WHERE s.ProgramCodes LIKE '%" + pcode + "%' ORDER BY s.SpaceCode");
 
     return query;
 }

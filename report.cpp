@@ -35,6 +35,11 @@ void Report::setTitle()
       *title << "Client" << "Space #" << "Start Date" << "End Date" 
              << "Program" << "ESP Days" << "Balance";//"Reason" << "ESP Days" << "Balance";
       break;
+    case REFUND_REPORT:
+      *title << "Client" << "Transaction" << "Type" << "Amount" << "MSDD" << "Cheque #"
+             << "Cheque Date" << "Status" << "Deleted" << "Employee" << "Time"
+             << "Notes";
+      break;
     case VACANCY_REPORT:
       *title << "Space #" << "Program Codes";
       break;
@@ -163,6 +168,12 @@ void Report::updateModelThread(QDate date, int shiftNo)
             Report::setTransactionData(&query);
           }
           break;
+      case REFUND_REPORT:
+        if (dbManager->getShiftReportRefundQuery(&query, date, shiftNo))
+        {
+          Report::setTransactionData(&query);
+        }
+        break;
         case CLIENT_REPORT:
           ret = dbManager->getShiftReportClientLogQuery(&query, date, shiftNo);
           break;

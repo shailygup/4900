@@ -19,7 +19,7 @@ QLabel *lbl_curShift;
 
 //MyModel* checkoutModel;
 Report *checkoutReport, *vacancyReport, *lunchReport, *wakeupReport,
-    *bookingReport, *transactionReport, *clientLogReport, *otherReport,
+    *bookingReport, *transactionReport, *refundReport, *clientLogReport, *otherReport,
     *yellowReport, *redReport;
 bool firstTime = true;
 QStack<int> backStack;
@@ -28,6 +28,7 @@ int workFlow;
 
 //client search info
 int transacNum, transacTotal;
+
 bool newTrans;
 int bookingNum, bookingTotal;
 bool newHistory;
@@ -1001,8 +1002,7 @@ void MainWindow::on_btn_payListAllUsers_clicked()
 {
     ui->editRemoveCheque->setHidden(true);
 
-    ui->btn_payDelete->setText("Edit Payment"); //Shaily Change**********
-
+    ui->btn_payDelete->setText("Add Payment");
     QStringList cols;
     QStringList heads;
     QSqlQuery tempSql = dbManager->getOwingClients();
@@ -1246,7 +1246,7 @@ bool MainWindow::doMessageBox(QString message){
     this->setStyleSheet("");
 
     QMessageBox::StandardButton reply;
-    reply = QMessageBox::question(this, "Confirm ", message, QMessageBox::Yes | QMessageBox::No);
+    reply = QMessageBox::question(this, "Confirm", message, QMessageBox::Yes | QMessageBox::No);
 
     this->setStyleSheet(tmpStyleSheet);
 
@@ -1346,18 +1346,11 @@ bool MainWindow::updateBooking(Booking b){
     //qDebug() << query;
     return dbManager->updateBooking(query);
 }
-
-//-------------------------Shaily's Changes--------------------------
 void MainWindow::on_btn_payDelete_clicked()
 {
-	ui->btn_payDelete->setHidden(false);
-	 QMessageBox msgBox;
-            
     if(ui->btn_payDelete->text() == "Cash Cheque")
     {
-		//if ((currentrole == ADMIN) ||(currentrole != ADMIN)){
-		//	ui->btn_payDelete->setHidden(true);
-		int index = ui->mpTable->selectionModel()->currentIndex().row();
+        int index = ui->mpTable->selectionModel()->currentIndex().row();
         if(index == -1)
             return;
         transaction * t = new transaction();
@@ -1369,48 +1362,22 @@ void MainWindow::on_btn_payDelete_clicked()
             return;
         updateCheque(index, t->chequeNo);
         delete(amd);
-		
-		//}
-		
-      
     }
     else if(ui->btn_payDelete->text() == "Delete"){
-        if(currentrole != ADMIN ){
-        //get a dealog box to show up
-		msgBox.setText("Sorry you don't have permissions to delete a payment, Admin Only Task");
-        msgBox.exec();
-		ui->btn_payDelete->hide();
-		}else{
-		
-			//ui->btn_payDelete->setHidden(false);
-			ui->btn_payDelete->show();
-		int index = ui->mpTable->selectionModel()->currentIndex().row();
+        int index = ui->mpTable->selectionModel()->currentIndex().row();
         if(index == -1)
             return;
-		
+
         getTransactionFromRow(index);
-		}
-		
     }
     else{
-		if(currentrole != ADMIN ){
-        //get a dealog box to show up
-		msgBox.setText("Sorry you don't have permissions to edit this payment, Admin Only Task");
-        msgBox.exec();
-		ui->btn_payDelete->hide();
-		}
-		else{ 
-		int index = ui->mpTable->selectionModel()->currentIndex().row();
+        int index = ui->mpTable->selectionModel()->currentIndex().row();
         if(index == -1)
             return;
         handleNewPayment(index);
-		}
-        
     }
-	ui->btn_payDelete->setHidden(false);
 
 }
-//------------------------------------------------------------------------------------
 
 void MainWindow::handleNewPayment(int row){
     curClient = new Client();
@@ -1978,7 +1945,7 @@ void MainWindow::on_pushButton_search_client_clicked()
     MainWindow::resizeTableView(ui->tableWidget_search_client);
 
     connect(ui->tableWidget_search_client, SIGNAL(cellClicked(int,int)), this, SLOT(set_curClient_name(int,int)),Qt::UniqueConnection);
-    connect(ui->tableWidget_search_client, SIGNAL(cellDoubleClicked(int,int)), this, SLOT(selected_client_info(int,int)),Qt::UniqueConnection);
+    connect(ui->tableWidget_search_client, SIGNAL(cellClicked(int,int)), this, SLOT(selected_client_info(int,int)),Qt::UniqueConnection);
 }
 
 void MainWindow::searchClientListThread(){
@@ -3242,7 +3209,7 @@ void MainWindow::on_btn_listAllUsers_clicked()
     ui->tableWidget_3->clear();
     //ui->tableWidget_3->horizontalHeader()->setStretchLastSection(true);
 
-    QSqlQuery result = dbManager->execQuery("SELECT Username, HASHBYTES('MD5',Password), Role, EmpName FROM Employee");
+    QSqlQuery result = dbManager->execQuery("SELECT Username, Password, Role, EmpName FROM Employee");
 
     int numCols = result.record().count();
     ui->tableWidget_3->setColumnCount(numCols);
@@ -3270,7 +3237,7 @@ void MainWindow::on_btn_searchUsers_clicked()
     ui->tableWidget_3->clear();
     //ui->tableWidget_3->horizontalHeader()->setStretchLastSection(true);
 
-    QSqlQuery result = dbManager->execQuery("SELECT Username, HASHBYTES('MD5',Password), Role, EmpName FROM Employee WHERE Username LIKE '%"+ ename +"%'");
+    QSqlQuery result = dbManager->execQuery("SELECT Username, Password, Role, EmpName FROM Employee WHERE Username LIKE '%"+ ename +"%'");
 
     int numCols = result.record().count();
     ui->tableWidget_3->setColumnCount(numCols);
@@ -4609,6 +4576,7 @@ void MainWindow::setupReportsScreen()
 
     bookingReport = new Report(this, ui->booking_tableView, BOOKING_REPORT);
     transactionReport = new Report(this, ui->transaction_tableView, TRANSACTION_REPORT);
+    refundReport = new Report(this, ui->refund_tableView, REFUND_REPORT);
     clientLogReport = new Report(this, ui->clientLog_tableView, CLIENT_REPORT);
     otherReport = new Report(this, ui->other_tableView, OTHER_REPORT);
     yellowReport = new Report(this, ui->yellowRestriction_tableView, YELLOW_REPORT);
@@ -4648,6 +4616,8 @@ void MainWindow::setupReportsScreen()
     connect(&(bookingReport->model), SIGNAL(modelDataUpdated(int, int)), this,
         SLOT(on_modelDataUpdated(int, int)),Qt::QueuedConnection);
     connect(&(transactionReport->model), SIGNAL(modelDataUpdated(int, int)), this,
+        SLOT(on_modelDataUpdated(int, int)),Qt::QueuedConnection);
+    connect(&(refundReport->model), SIGNAL(modelDataUpdated(int, int)), this,
         SLOT(on_modelDataUpdated(int, int)),Qt::QueuedConnection);
     connect(&(clientLogReport->model), SIGNAL(modelDataUpdated(int, int)), this,
         SLOT(on_modelDataUpdated(int, int)),Qt::QueuedConnection);
@@ -4754,6 +4724,7 @@ void MainWindow::updateShiftReportTables(QDate date, int shiftNo)
     //     QtConcurrent::run(bookingReport, &bookingReport->updateModelThread, date, shiftNo));
     bookingReport->updateModel(date, shiftNo);
     transactionReport->updateModel(date, shiftNo);
+    refundReport->updateModel(date, shiftNo);
     clientLogReport->updateModel(date, shiftNo);
     otherReport->updateModel(date, shiftNo);
 
@@ -4819,7 +4790,7 @@ void MainWindow::on_saveOther_btn_clicked()
     }
     QDate date = ui->shiftReport_dateEdit->date();
     int shiftNo = ui->shiftReport_spinBox->value();
-   useProgressDialog("Processing reports...",
+    useProgressDialog("Processing reports...",
        QtConcurrent::run(otherReport, &bookingReport->updateModelThread, date, shiftNo));
 
 }
@@ -4875,7 +4846,9 @@ void MainWindow::updateShiftReportStats(QStringList list, bool conn)
         ui->lbl_debitAmt->setText(list.at(1));
         ui->lbl_chequeAmt->setText(list.at(2));
         ui->lbl_depoAmt->setText(list.at(3));
-        ui->lbl_shiftAmt->setText(list.at(4));    }
+        ui->lbl_refundAmt->setText(list.at(4));
+        ui->lbl_shiftAmt->setText(list.at(5));
+    }
 }
 
 void MainWindow::updateCashFloat(QDate date, int shiftNo, QStringList list, bool conn)
@@ -6126,7 +6099,9 @@ void MainWindow::printShiftReport(const int recNo, const QString paramName, QVar
             paramValue = ui->lbl_depoAmt->text();
         } else if (paramName == "total") {
             paramValue = ui->lbl_shiftAmt->text();
-        } else if (paramName == "streetNo"){
+        } else if (paramName == "refund") {
+            paramValue = ui->lbl_refundAmt->text();
+        }else if (paramName == "streetNo"){
              paramValue = getStreetNo();
              qDebug() << paramValue;
         } else if (paramName == "streetName"){
@@ -7357,7 +7332,7 @@ void MainWindow::on_editDelete_clicked()
         return;
     QString userRole = role.value("Role").toString();
     if(userRole != "ADMIN"){
-        doMessageBox("Admin Only Feature");
+        doMessageBox("Admin only feature");
         return;
     }
     if(!doMessageBox("Deleting is permenant, booking cost is refunded. Continue?"))
@@ -7719,6 +7694,9 @@ void MainWindow::on_shiftReport_tabWidget_currentChanged(int index)
             resizeTableView(ui->clientLog_tableView);
             break;
         case 3:
+            resizeTableView(ui->refund_tableView);
+            break;
+        case 4:
             resizeTableView(ui->other_tableView);
     }
 }
@@ -7750,7 +7728,7 @@ void MainWindow::on_actionAbout_triggered()
                                                     "Eunwon Moon\nimoongom@gmail.com\n\n"
                                                     "Hank Lo\nhlo1453@gmail.com\n\n"
                                                     "Joseph Tam\njosephtam3@gmail.com\n\n"
-                                                    "BCIT 2017");
+                                                    "BCIT 2016");
     aboutBox.setIcon(QMessageBox::Information);
     aboutBox.exec();
     qDebug() << "about clicked";
