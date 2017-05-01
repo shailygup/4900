@@ -122,10 +122,14 @@ QWidget#wdg_depoTotal, QWidget#wdg_totalBeds{
         background-color: #D9AC35;
 }
 QWidget#wdg_shiftTotal, QWidget#wdg_totalBeds, QWidget#wdg_uniqueClients{
+        background-color: #db9b5b;
+}
+
+QWidget#wdg_refundTotal, QWidget#wdg_totalBeds, QWidget#wdg_uniqueClients{
         background-color: #1ABC9C;
 }
 
-QWidget#wdg_cashTotal QLabel, QWidget#wdg_debitTotal QLabel, QWidget#wdg_cheqTotal QLabel,QWidget#wdg_depoTotal QLabel, QWidget#wdg_shiftTotal QLabel, QWidget#wdg_logsOnShift QLabel, QWidget#wdg_occRate QLabel, QWidget#wdg_totalESP QLabel, QWidget#wdg_transTotal QLabel, QWidget#wdg_totalESPVac QLabel, QWidget#wdg_totalVac QLabel, QWidget#wdg_ESPBedsAvail QLabel, QWidget#wdg_totalBeds QLabel, QWidget#wdg_bedsUsed QLabel, QWidget#wdg_emptyBeds QLabel, QWidget#wdg_newClients  QLabel,
+QWidget#wdg_cashTotal QLabel, QWidget#wdg_debitTotal QLabel, QWidget#wdg_cheqTotal QLabel,QWidget#wdg_depoTotal QLabel, QWidget#wdg_shiftTotal QLabel, QWidget#wdg_refundTotal QLabel, QWidget#wdg_logsOnShift QLabel, QWidget#wdg_occRate QLabel, QWidget#wdg_totalESP QLabel, QWidget#wdg_transTotal QLabel, QWidget#wdg_totalESPVac QLabel, QWidget#wdg_totalVac QLabel, QWidget#wdg_ESPBedsAvail QLabel, QWidget#wdg_totalBeds QLabel, QWidget#wdg_bedsUsed QLabel, QWidget#wdg_emptyBeds QLabel, QWidget#wdg_newClients  QLabel,
 QWidget#wdg_uniqueClients QLabel
 {
         color: white;
@@ -224,7 +228,7 @@ QHeaderView{
     <item row="0" column="0">
      <widget class="QStackedWidget" name="stackedWidget">
       <property name="currentIndex">
-       <number>6</number>
+       <number>11</number>
       </property>
       <widget class="QWidget" name="mainMenu">
        <layout class="QGridLayout" name="gridLayout_55">
@@ -529,7 +533,7 @@ Lookup</string>
       </widget>
       <widget class="QWidget" name="clientLookup">
        <layout class="QGridLayout" name="gridLayout_7">
-        <item row="3" column="0">
+        <item row="4" column="0">
          <widget class="QTableWidget" name="tableWidget_search_client">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -571,7 +575,7 @@ Lookup</string>
           </attribute>
          </widget>
         </item>
-        <item row="5" column="0" colspan="4">
+        <item row="6" column="0" colspan="4">
          <layout class="QHBoxLayout" name="horizontalLayout_15">
           <item>
            <spacer name="horizontalSpacer_68">
@@ -937,7 +941,7 @@ Lookup</string>
           </item>
          </layout>
         </item>
-        <item row="0" column="3" rowspan="5">
+        <item row="0" column="3" rowspan="6">
          <widget class="QTabWidget" name="tabWidget_cl_info">
           <property name="sizePolicy">
            <sizepolicy hsizetype="Expanding" vsizetype="Expanding">
@@ -951,7 +955,7 @@ Lookup</string>
            </font>
           </property>
           <property name="currentIndex">
-           <number>1</number>
+           <number>0</number>
           </property>
           <widget class="QWidget" name="tab_cl_general">
            <attribute name="title">
@@ -2794,6 +2798,9 @@ Lookup</string>
           </widget>
          </widget>
         </item>
+        <item row="3" column="0">
+         <widget class="QAxWidget" name="axWidget"/>
+        </item>
        </layout>
       </widget>
       <widget class="QWidget" name="bookingLookup">
@@ -4020,12 +4027,9 @@ Lookup</string>
                <property name="orientation">
                 <enum>Qt::Horizontal</enum>
                </property>
-               <property name="sizeType">
-                <enum>QSizePolicy::MinimumExpanding</enum>
-               </property>
                <property name="sizeHint" stdset="0">
                 <size>
-                 <width>20</width>
+                 <width>40</width>
                  <height>20</height>
                 </size>
                </property>
@@ -5800,7 +5804,7 @@ Programs</string>
                 <rect>
                  <x>0</x>
                  <y>0</y>
-                 <width>626</width>
+                 <width>620</width>
                  <height>1294</height>
                 </rect>
                </property>
@@ -11209,6 +11213,62 @@ Programs</string>
                     </widget>
                    </item>
                    <item>
+                    <widget class="QWidget" name="wdg_refundTotal" native="true">
+                     <property name="minimumSize">
+                      <size>
+                       <width>207</width>
+                       <height>151</height>
+                      </size>
+                     </property>
+                     <layout class="QGridLayout" name="gridLayout_30">
+                      <item row="1" column="0">
+                       <spacer name="horizontalSpacer_9">
+                        <property name="orientation">
+                         <enum>Qt::Horizontal</enum>
+                        </property>
+                        <property name="sizeType">
+                         <enum>QSizePolicy::Expanding</enum>
+                        </property>
+                        <property name="sizeHint" stdset="0">
+                         <size>
+                          <width>40</width>
+                          <height>20</height>
+                         </size>
+                        </property>
+                       </spacer>
+                      </item>
+                      <item row="1" column="1">
+                       <widget class="QLabel" name="lbl_refundTotal">
+                        <property name="font">
+                         <font>
+                          <pointsize>14</pointsize>
+                          <weight>50</weight>
+                          <bold>false</bold>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>Refund Total</string>
+                        </property>
+                       </widget>
+                      </item>
+                      <item row="0" column="0" colspan="2">
+                       <widget class="QLabel" name="lbl_refundAmt">
+                        <property name="font">
+                         <font>
+                          <pointsize>25</pointsize>
+                          <weight>50</weight>
+                          <bold>false</bold>
+                         </font>
+                        </property>
+                        <property name="text">
+                         <string>$0.00</string>
+                        </property>
+                       </widget>
+                      </item>
+                     </layout>
+                    </widget>
+                   </item>
+                   <item>
                     <widget class="QWidget" name="wdg_shiftTotal" native="true">
                      <property name="minimumSize">
                       <size>
@@ -11499,6 +11559,25 @@ Programs</string>
                     <layout class="QGridLayout" name="gridLayout_66">
                      <item row="0" column="0">
                       <widget class="QTableView" name="clientLog_tableView">
+                       <property name="font">
+                        <font>
+                         <pointsize>11</pointsize>
+                        </font>
+                       </property>
+                       <property name="selectionBehavior">
+                        <enum>QAbstractItemView::SelectRows</enum>
+                       </property>
+                      </widget>
+                     </item>
+                    </layout>
+                   </widget>
+                   <widget class="QWidget" name="tab_12">
+                    <attribute name="title">
+                     <string>Refund</string>
+                    </attribute>
+                    <layout class="QGridLayout" name="gridLayout_68">
+                     <item row="0" column="0">
+                      <widget class="QTableView" name="refund_tableView">
                        <property name="font">
                         <font>
                          <pointsize>11</pointsize>
@@ -20207,6 +20286,13 @@ Programs</string>
   </action>
  </widget>
  <layoutdefault spacing="6" margin="11"/>
+ <customwidgets>
+  <customwidget>
+   <class>QAxWidget</class>
+   <extends>QWidget</extends>
+   <header>qaxwidget.h</header>
+  </customwidget>
+ </customwidgets>
  <resources/>
  <connections/>
 </ui>

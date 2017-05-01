@@ -94,6 +94,7 @@ public:
     QStringList getSpaceInfoFromId(int spaceId);
     bool getShiftReportBookingQuery(QSqlQuery* queryResults, QDate date, int shiftNo);
     bool getShiftReportTransactionQuery(QSqlQuery* queryResults, QDate date, int shiftNo);
+    bool getShiftReportRefundQuery(QSqlQuery* queryResults, QDate date, int shiftNo);
     bool getShiftReportTotal(QDate date, int shiftNo, QString payType, double* result);
     void getShiftReportStatsThread(QDate date, int shiftNo);
     bool getShiftReportClientLogQuery(QSqlQuery* queryResults, QDate date, int shiftNo);

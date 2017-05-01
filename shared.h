@@ -10,6 +10,7 @@
 #define PAY_CASH                "Cash"
 #define PAY_CHEQUE              "Cheque"
 #define PAY_ELECTRONIC          "Electronic"
+#define PAY_REFUND              "Refund"
 #define VAL_NICKEL              0.05f
 #define VAL_DIME                0.1f
 #define VAL_QUARTER             0.25f
@@ -33,6 +34,7 @@
 #define TRANSACTION_REPORT    5
 #define CLIENT_REPORT         6
 #define OTHER_REPORT          7
+#define REFUND_REPORT        13
 
 // No params
 #define YELLOW_REPORT         8
